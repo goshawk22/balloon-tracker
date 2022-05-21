@@ -15,10 +15,13 @@ function Decoder(bytes, port) {
   var longitude = ((bytes[3] << 16) >>> 0) + ((bytes[4] << 8) >>> 0) + bytes[5];
   longitude = (longitude / 16777215.0 * 360) - 180;
 
+  location = latitude + ", " + longitude;
+
   switch (port) {
     case 2: // GPS!
       decoded.latitude = latitude;
       decoded.longitude = longitude;
+      decoded.location = location;
 
       var altValue = ((bytes[6] << 8) >>> 0) + bytes[7];
       var sign = bytes[6] & (1 << 7);
@@ -50,6 +53,8 @@ function Decoder(bytes, port) {
     case 6: // Lost GPS
       decoded.last_latitude = latitude;
       decoded.last_longitude = longitude;
+      decoded.location = location;
+
       var altValue = ((bytes[6] << 8) >>> 0) + bytes[7];
       var sign = bytes[6] & (1 << 7);
       if (sign)
