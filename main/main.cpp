@@ -386,7 +386,8 @@ void setup() {
 
   // Helium setup
   if (!ttn_setup()) {
-    // Maybe reboot here?
+    // Something has gone wrong, and now the tracker can't do anything. Restart and hope the problem fixes itself.
+    ESP.restart();
   }
 
   ttn_register(lora_msg_callback);
