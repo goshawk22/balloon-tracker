@@ -134,6 +134,7 @@ void pack_bme280() {
     txBuffer[19] = bmeHumidity & 0xFF;
 
   } else {
+    // Obviously bad values to show something went wrong
     txBuffer[13] = -100;
     txBuffer[14] = -100;
     txBuffer[15] = -100;
@@ -152,6 +153,7 @@ void pack_ltr390() {
     txBuffer[20] = (uv >> 8) & 0xFF;
     txBuffer[21] = uv & 0xFF;
   } else {
+    // Obviously bad values to show something went wrong
     txBuffer[20] = -100;
     txBuffer[21] = -100;
   }
