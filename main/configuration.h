@@ -80,7 +80,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // -----------------------------------------------------------------------------
 
 #define TX_INTERVAL   (0.5 * 60) // How often to transmit a packet
-#define GPS_LOST_INTERVAL (0.5 * 60)  // Without GPS reception, how often to send a non-mapper status packet
 
 // -----------------------------------------------------------------------------
 // DEBUG

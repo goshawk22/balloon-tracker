@@ -59,13 +59,11 @@ Copyright (C) 2021 by @Max_Plastix
 void ttn_register(void (*callback)(uint8_t message));
 
 unsigned long int last_send_ms = 0;     // Time of last uplink
-unsigned long int last_gpslost_ms = 0;  // Time of last gps-lost packet
 double last_send_lat = 0;               // Last known location
 double last_send_lon = 0;               //
 uint32_t last_fix_time = 0;
 
 unsigned int tx_interval_s = TX_INTERVAL;  // TX_INTERVAL
-unsigned int tx_gpslost_interval_s = GPS_LOST_INTERVAL;  // TX_INTERVAL
 
 // Return status from mapper uplink, since we care about the flavor of the failure
 enum mapper_uplink_result { 
@@ -89,6 +87,8 @@ unsigned long int ack_rx = 0;
 static boolean booted = false;
 
 boolean send_uplink(uint8_t *txBuffer, uint8_t length, uint8_t fport, boolean confirmed) {
+  unsigned long int now = millis();
+
   if (confirmed) {
     Serial.println("ACK requested");
     ack_req++;
@@ -99,7 +99,7 @@ boolean send_uplink(uint8_t *txBuffer, uint8_t length, uint8_t fport, boolean co
     Serial.println("Surprise send failure!");
     return false;
   }
-
+  last_send_ms = now;
   return true;
 }
 
@@ -244,7 +244,6 @@ bool gpslost_uplink(void) {
 enum mapper_uplink_result mapper_uplink() {
   double now_lat = tGPS.location.lat();
   double now_lon = tGPS.location.lng();
-  unsigned long int now = millis();
 
   // Here we try to filter out bogus GPS readings.
   if (!(tGPS.location.isValid() && tGPS.time.isValid() && tGPS.satellites.isValid() && tGPS.hdop.isValid() &&
@@ -281,7 +280,6 @@ enum mapper_uplink_result mapper_uplink() {
   if (!send_uplink(txBuffer, 22, FPORT_GPS, confirmed))
     return MAPPER_UPLINK_NOLORA;
 
-  last_send_ms = now;
   last_send_lat = now_lat;
   last_send_lon = now_lon;
 
@@ -452,11 +450,7 @@ void loop() {
   if (now - last_send_ms > tx_interval_s * 1000) {
     Serial.println("** TIME");
     if (mapper_uplink() == MAPPER_UPLINK_BADFIX) {
-      if (now - last_gpslost_ms > tx_gpslost_interval_s * 1000) {
-        gpslost_uplink(); // No GPS so send ghost uplink
-        last_send_ms = now;
-        last_gpslost_ms = now;
-      }
+      gpslost_uplink(); // No GPS so send ghost uplink
     }
   }
 }
