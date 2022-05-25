@@ -75,7 +75,6 @@ enum mapper_uplink_result {
   MAPPER_UPLINK_NOTYET
 };
 
-bool packetQueued;
 bool isJoined = false;
 
 // Buffer for Payload frame
@@ -96,7 +95,6 @@ boolean send_uplink(uint8_t *txBuffer, uint8_t length, uint8_t fport, boolean co
   }
 
   // send it!
-  packetQueued = true;
   if (!ttn_send(txBuffer, length, fport, confirmed)) {
     Serial.println("Surprise send failure!");
     return false;
@@ -332,12 +330,6 @@ void lora_msg_callback(uint8_t message) {
   if (!isJoined && seen_joined && seen_joining) {
     isJoined = true;
     ttn_set_sf(LORAWAN_SF);  // SF is left at SF that had a successful join so change to preferred SF
-  }
-
-  // We only want to say 'packetSent' for our packets (not packets needed for
-  // joining)
-  if (EV_TXCOMPLETE == message && packetQueued) {
-    packetQueued = false;
   }
 
   if (EV_ACK == message) {
