@@ -62,6 +62,7 @@ unsigned long int last_send_ms = 0;     // Time of last uplink
 double last_send_lat = 0;               // Last known location
 double last_send_lon = 0;               //
 uint32_t last_fix_time = 0;
+bool transmitted = false;               // Have we transmitted a sensor uplink yet?
 
 unsigned int tx_interval_s = TX_INTERVAL;  // TX_INTERVAL
 
@@ -86,8 +87,20 @@ unsigned long int ack_rx = 0;
 
 static boolean booted = false;
 
-boolean send_uplink(uint8_t *txBuffer, uint8_t length, uint8_t fport, boolean confirmed) {
+enum mapper_uplink_result send_uplink(uint8_t *txBuffer, uint8_t length, uint8_t fport, boolean confirmed) {
   unsigned long int now = millis();
+
+  // Don't attempt to send or update until we join Helium
+  if (!isJoined)
+    return MAPPER_UPLINK_NOLORA;
+
+  // LoRa is not ready for a new packet, maybe still sending the last one.
+  if (!LMIC_queryTxReady())
+    return MAPPER_UPLINK_NOLORA;
+  
+  // Check if there is not a current TX/RX job running
+  if (LMIC.opmode & OP_TXRXPEND)
+    return MAPPER_UPLINK_NOLORA;
 
   if (confirmed) {
     Serial.println("ACK requested");
@@ -97,10 +110,10 @@ boolean send_uplink(uint8_t *txBuffer, uint8_t length, uint8_t fport, boolean co
   // send it!
   if (!ttn_send(txBuffer, length, fport, confirmed)) {
     Serial.println("Surprise send failure!");
-    return false;
+    return MAPPER_UPLINK_NOLORA;
   }
   last_send_ms = now;
-  return true;
+  return MAPPER_UPLINK_SUCCESS;
 }
 
 // Store Lat & Long in six bytes of payload
@@ -219,9 +232,12 @@ bool status_uplink(void) {
   return send_uplink(txBuffer, 8, FPORT_STATUS, 0);
 }
 
-bool gpslost_uplink(void) {
+enum mapper_uplink_result gpslost_uplink(void) {
   uint16_t minutes_lost;
   unsigned long int uptime;
+
+  // Want an ACK on this one?
+  bool confirmed = (LORAWAN_CONFIRMED_EVERY > 0) && (ttn_get_count() % LORAWAN_CONFIRMED_EVERY == 0);
 
   uptime = millis() / 1000 / 60;
   minutes_lost = (millis() - last_fix_time) / 1000 / 60;
@@ -237,11 +253,11 @@ bool gpslost_uplink(void) {
   pack_bme280();
   pack_ltr390();
   Serial.printf("Tx: GPSLOST %d\n", minutes_lost);
-  return send_uplink(txBuffer, 22, FPORT_GPSLOST, 0);
+  return send_uplink(txBuffer, 22, FPORT_GPSLOST, confirmed);
 }
 
 // Send a packet, if one is warranted
-enum mapper_uplink_result mapper_uplink() {
+enum mapper_uplink_result gps_uplink() {
   double now_lat = tGPS.location.lat();
   double now_lon = tGPS.location.lng();
 
@@ -258,32 +274,26 @@ enum mapper_uplink_result mapper_uplink() {
   if (now_lat == 0.0 || now_lon == 0.0)
     return MAPPER_UPLINK_BADFIX;
 
-  // Don't attempt to send or update until we join Helium
-  if (!isJoined)
-    return MAPPER_UPLINK_NOLORA;
-
-  // LoRa is not ready for a new packet, maybe still sending the last one.
-  if (!LMIC_queryTxReady())
-    return MAPPER_UPLINK_NOLORA;
-
-  // Check if there is not a current TX/RX job running
-  if (LMIC.opmode & OP_TXRXPEND)
-    return MAPPER_UPLINK_NOLORA;
-
   // prepare the LoRa frame
   build_full_packet();
 
   // Want an ACK on this one?
   bool confirmed = (LORAWAN_CONFIRMED_EVERY > 0) && (ttn_get_count() % LORAWAN_CONFIRMED_EVERY == 0);
 
-  // Send it!
-  if (!send_uplink(txBuffer, 22, FPORT_GPS, confirmed))
-    return MAPPER_UPLINK_NOLORA;
-
   last_send_lat = now_lat;
   last_send_lon = now_lon;
+  
+  // Send it!
+  return send_uplink(txBuffer, 22, FPORT_GPS, confirmed);  // We did it!
+}
 
-  return MAPPER_UPLINK_SUCCESS;  // We did it!
+enum mapper_uplink_result uplink() {
+  enum mapper_uplink_result result = gps_uplink();
+  if (result == MAPPER_UPLINK_BADFIX) {
+    return gpslost_uplink();
+  } else {
+    return result;
+  }
 }
 
 // LoRa message event callback
@@ -449,10 +459,13 @@ void loop() {
     ltr390_alive = true;
   }
   
-  if (now - last_send_ms > tx_interval_s * 1000) {
-    Serial.println("** TIME");
-    if (mapper_uplink() == MAPPER_UPLINK_BADFIX) {
-      gpslost_uplink(); // No GPS so send ghost uplink
+  // Only transmit if joined
+  if (isJoined) {
+    if (now - last_send_ms > tx_interval_s * 1000 || (transmitted == false && LMIC_queryTxReady())) {
+      Serial.println("** TIME");
+      if (uplink() == MAPPER_UPLINK_SUCCESS) {
+         transmitted = true;
+      }
     }
   }
 }
