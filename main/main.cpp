@@ -403,6 +403,14 @@ void setup() {
     Serial.println("** Missing AXP192! **\n");
 
   booted = 1;
+
+  // Send status uplink
+  while (!isJoined) {
+    ttn_loop();
+  }
+  if (isJoined) {
+    status_uplink();
+  }
 }
 
 uint32_t woke_time_ms = 0;
@@ -421,13 +429,6 @@ void loop() {
   }
 
   ttn_loop();
-
-  if (booted) {
-    if (isJoined) {
-      status_uplink();
-      booted = 0; // So we don't send status uplink again
-    }
-  }
 
   // Check if sensors have failed
   if (!checkI2Cdevice(I2C_BME280_ADDRESS)) {
