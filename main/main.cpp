@@ -461,10 +461,13 @@ void loop() {
   
   // Only transmit if joined
   if (isJoined) {
-    if (now - last_send_ms > tx_interval_s * 1000 || (transmitted == false && LMIC_queryTxReady())) {
-      Serial.println("** TIME");
-      if (uplink() == MAPPER_UPLINK_SUCCESS) {
-         transmitted = true;
+    // Only transmit if TxReady
+    if (LMIC_queryTxReady()) {
+      if (now - last_send_ms > tx_interval_s * 1000 || !transmitted) {
+        Serial.println("** TIME");
+        if (uplink() == MAPPER_UPLINK_SUCCESS) {
+          transmitted = true;
+        }
       }
     }
   }
