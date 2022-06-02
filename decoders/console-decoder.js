@@ -35,9 +35,9 @@ function Decoder(bytes, port) {
       decoded.sats = bytes[10];
       decoded.uptime = bytes[11];
       decoded.minutes_lost = bytes[12];
-      decoded.bmetemp = ((bytes[13] << 8) + bytes[14]) / 100.0;
-      decoded.bmepressure = (bytes[15] << 16) + (bytes[16] << 8) + bytes[16];
-      decoded.bmehumidity = ((bytes[18] << 8) + bytes[19]) / 100.0;
+      decoded.temperature = ((bytes[13] << 8) + bytes[14]) / 100.0;
+      decoded.pressure = (bytes[15] << 16) + (bytes[16] << 8) + bytes[16];
+      decoded.humidity = ((bytes[18] << 8) + bytes[19]) / 100.0;
       decoded.uv = (bytes[20] << 8) + bytes[21];
       
       decoded.accuracy = 2.5; // Bogus Accuracy required by Cargo/Mapper integration
@@ -53,7 +53,7 @@ function Decoder(bytes, port) {
     case 6: // Lost GPS
       decoded.last_latitude = latitude;
       decoded.last_longitude = longitude;
-      decoded.location = location;
+      decoded.last_location = location;
 
       var altValue = ((bytes[6] << 8) >>> 0) + bytes[7];
       var sign = bytes[6] & (1 << 7);
@@ -67,9 +67,9 @@ function Decoder(bytes, port) {
       decoded.sats = bytes[10];
       decoded.uptime = bytes[11];
       decoded.minutes_lost = bytes[12];
-      decoded.bmetemp = ((bytes[13] << 8) + bytes[14]) / 100.0;
-      decoded.bmepressure = (bytes[15] << 16) + (bytes[16] << 8) + bytes[16];
-      decoded.bmehumidity = ((bytes[18] << 8) + bytes[19]) / 100.0;
+      decoded.temperature = ((bytes[13] << 8) + bytes[14]) / 100.0;
+      decoded.pressure = (bytes[15] << 16) + (bytes[16] << 8) + bytes[16];
+      decoded.humidity = ((bytes[18] << 8) + bytes[19]) / 100.0;
       decoded.uv = (bytes[20] << 8) + bytes[21];
 
       decoded.accuracy = 2.5; // Bogus Accuracy required by Cargo/Mapper integration
