@@ -51,6 +51,7 @@ Copyright (C) 2021 by @Max_Plastix
 #include <WiFi.h>
 #include <esp_bt.h>
 
+#define FPORT_PING 1
 #define FPORT_GPS 2  // FPort for Uplink messages -- must match Helium Console Decoder script!
 #define FPORT_STATUS 5
 #define FPORT_GPSLOST 6
@@ -63,6 +64,8 @@ double last_send_lat = 0;               // Last known location
 double last_send_lon = 0;               //
 uint32_t last_fix_time = 0;
 bool transmitted = false;               // Have we transmitted a sensor uplink yet?
+bool ping = false;                      // Are we waiting for a ping packet to complete?
+bool ping_requested = false;             // Has a ping packet been requested by a downlink?
 
 unsigned int tx_interval_s = TX_INTERVAL;  // TX_INTERVAL
 
@@ -82,12 +85,15 @@ static uint8_t txBuffer[22];
 // Buffer for Serial output
 char msgBuffer[40];
 
+// Ping Payload
+static uint8_t txPing[1];
+
 unsigned long int ack_req = 0;
 unsigned long int ack_rx = 0;
 
 static boolean booted = false;
 
-enum mapper_uplink_result send_uplink(uint8_t *txBuffer, uint8_t length, uint8_t fport, boolean confirmed) {
+enum mapper_uplink_result send_uplink(uint8_t *txBuffer, uint8_t length, uint8_t fport, boolean confirmed, boolean ping) {
   unsigned long int now = millis();
 
   // Don't attempt to send or update until we join Helium
@@ -112,7 +118,9 @@ enum mapper_uplink_result send_uplink(uint8_t *txBuffer, uint8_t length, uint8_t
     Serial.println("Surprise send failure!");
     return MAPPER_UPLINK_NOLORA;
   }
-  last_send_ms = now;
+  if (!ping) {
+    last_send_ms = now;
+  }
   return MAPPER_UPLINK_SUCCESS;
 }
 
@@ -229,7 +237,7 @@ bool status_uplink(void) {
   txBuffer[6] = battery_byte();
   txBuffer[7] = uptime & 0xFF; // Time since booted
   Serial.printf("Tx: STATUS %lu \n", uptime);
-  return send_uplink(txBuffer, 8, FPORT_STATUS, 0);
+  return send_uplink(txBuffer, 8, FPORT_STATUS, 0, 0);
 }
 
 enum mapper_uplink_result gpslost_uplink(void) {
@@ -253,7 +261,7 @@ enum mapper_uplink_result gpslost_uplink(void) {
   pack_bme280();
   pack_ltr390();
   Serial.printf("Tx: GPSLOST %d\n", minutes_lost);
-  return send_uplink(txBuffer, 22, FPORT_GPSLOST, confirmed);
+  return send_uplink(txBuffer, 22, FPORT_GPSLOST, confirmed, 0);
 }
 
 // Send a packet, if one is warranted
@@ -284,7 +292,7 @@ enum mapper_uplink_result gps_uplink() {
   last_send_lon = now_lon;
   
   // Send it!
-  return send_uplink(txBuffer, 22, FPORT_GPS, confirmed);  // We did it!
+  return send_uplink(txBuffer, 22, FPORT_GPS, confirmed, 0);  // We did it!
 }
 
 enum mapper_uplink_result uplink() {
@@ -294,6 +302,12 @@ enum mapper_uplink_result uplink() {
   } else {
     return result;
   }
+}
+
+void ping_uplink() {
+  txPing[0] = 1 & 0xFF;
+  send_uplink(txPing, 1, FPORT_PING, 0, 1);
+  ESP.restart();
 }
 
 // LoRa message event callback
@@ -357,13 +371,16 @@ void lora_msg_callback(uint8_t message) {
     uint8_t port;
     ttn_response(&port, data, len);
 
-    Serial.printf("Downlink on port: %d = ", port);
+    Serial.printf("Downlink on port: %d, length %d = ", port, len);
     for (int i = 0; i < len; i++) {
       if (data[i] < 16)
         Serial.print('0');
       Serial.print(data[i], HEX);
     }
     Serial.println();
+    if (data[0] == 0x01) {
+      ping_requested = true;
+    }
   }
 }
 
@@ -467,16 +484,24 @@ void loop() {
     }
     ltr390_alive = true;
   }
+
+  // Transmit ping packet
+  if ((!ping && LMIC_queryTxReady() && now - last_send_ms > 10*1000) && ((LORAWAN_PING_EVERY > 0 && ttn_get_count() % LORAWAN_PING_EVERY == 0) || ping_requested)) {
+    ping_requested = false;
+    Serial.println("** PING");
+    ping = true;
+    ttn_set_sf(LORAWAN_SF_PING);
+    ping_uplink();
+  }
   
-  // Only transmit if joined
-  if (isJoined) {
-    // Only transmit if TxReady
-    if (LMIC_queryTxReady()) {
-      if (now - last_send_ms > tx_interval_s * 1000 || !transmitted) {
-        Serial.println("** TIME");
-        if (uplink() == MAPPER_UPLINK_SUCCESS) {
-          transmitted = true;
-        }
+  // Only transmit if joined and TxReady
+  if (isJoined && LMIC_queryTxReady()) {
+    if (now - last_send_ms > tx_interval_s * 1000 || !transmitted) {
+      Serial.println("** TIME");
+      if (uplink() == MAPPER_UPLINK_SUCCESS) {
+        transmitted = true;
+        // Reset the ping status
+        ping = false;
       }
     }
   }

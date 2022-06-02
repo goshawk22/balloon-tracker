@@ -37,10 +37,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // (0 means never, 1 means always, 2 every-other-one..)
 #define LORAWAN_CONFIRMED_EVERY 0  // Request Confirmation message every N Uplinks 
 
+// Ping messages are small (1 byte) messages that we transmit every N uplinks on SF12 for maximum range.
+// They are designed to see how far we can feasibly transmit a packet.
+#define LORAWAN_PING_EVERY 0  // Request Ping message every N Uplinks
+
 // Spreading Factor (Data Rate) determines how long each 11-byte Mapper Uplink is on-air, and how observable it is.
 // SF10 is about two seconds per packet, and the highest range, while SF7 is a good compromise
 // for moving vehicles and reasonable mapping observations.
 #define LORAWAN_SF DR_SF7  // Spreading factor (recommended DR_SF7 for network map purposes)
+#define LORAWAN_SF_PING DR_SF12
 
 // There are some extra non-Mapper Uplink messages we can send, but there's no good way to avoid sending these
 // to all Integrations from the Decoder.  This causes (normal) Error messages on the Console because Mapper will throw
