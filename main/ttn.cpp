@@ -431,7 +431,7 @@ void ttn_set_sf(dr_t sf) {
 }
 
 void ttn_sf(dr_t sf) {
-  // Serial.printf("Setting SF to %d\n", sf);
+  Serial.printf("Setting SF to %d\n", sf);
   LMIC_setDrTxpow(sf, 14);
 }
 
