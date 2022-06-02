@@ -376,6 +376,11 @@ void setup() {
   WiFi.mode(WIFI_MODE_NULL);
   btStop();
 
+  // Make sure prefs get erased
+  if (JOIN_FROM_SCRATCH) {
+    ttn_erase_prefs();
+  }
+
   Wire.begin(I2C_SDA, I2C_SCL);
   scanI2Cdevice();
 
