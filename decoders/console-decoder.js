@@ -47,7 +47,7 @@ function Decoder(bytes, port) {
       decoded.last_latitude = latitude;
       decoded.last_longitude = longitude;
       decoded.battery = parseFloat((bytes[6] / 100 + 2).toFixed(2));
-      decoded.value = bytes[7];
+      decoded.uptime = bytes[7];
       decoded.status = "BOOTED";
       break;
     case 6: // Lost GPS
