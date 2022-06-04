@@ -80,7 +80,7 @@ enum mapper_uplink_result {
 bool isJoined = false;
 
 // Buffer for Payload frame
-static uint8_t txBuffer[22];
+static uint8_t txBuffer[24];
 
 // Buffer for Serial output
 char msgBuffer[40];
@@ -146,23 +146,23 @@ void pack_bme280() {
     int bmePressure = bme.readPressure();
     int bmeHumidity = bme.readHumidity() * 100;
 
-    txBuffer[13] = (bmeTemp >> 8) & 0xFF;
-    txBuffer[14] = bmeTemp & 0xFF;
-    txBuffer[15] = (bmePressure >> 16) & 0xFF;
-    txBuffer[16] = (bmePressure >> 8) & 0xFF;
-    txBuffer[17] = bmePressure & 0xFF;
-    txBuffer[18] = (bmeHumidity >> 8) & 0xFF;
-    txBuffer[19] = bmeHumidity & 0xFF;
+    txBuffer[15] = (bmeTemp >> 8) & 0xFF;
+    txBuffer[16] = bmeTemp & 0xFF;
+    txBuffer[17] = (bmePressure >> 16) & 0xFF;
+    txBuffer[18] = (bmePressure >> 8) & 0xFF;
+    txBuffer[19] = bmePressure & 0xFF;
+    txBuffer[20] = (bmeHumidity >> 8) & 0xFF;
+    txBuffer[21] = bmeHumidity & 0xFF;
 
   } else {
     // Obviously bad values to show something went wrong
-    txBuffer[13] = -100;
-    txBuffer[14] = -100;
     txBuffer[15] = -100;
     txBuffer[16] = -100;
     txBuffer[17] = -100;
     txBuffer[18] = -100;
     txBuffer[19] = -100;
+    txBuffer[20] = -100;
+    txBuffer[21] = -100;
 
   }
 }
@@ -171,12 +171,12 @@ void pack_ltr390() {
   if (ltr390_alive) {
     int uv = ltr.readUVS();
 
-    txBuffer[20] = (uv >> 8) & 0xFF;
-    txBuffer[21] = uv & 0xFF;
+    txBuffer[22] = (uv >> 8) & 0xFF;
+    txBuffer[23] = uv & 0xFF;
   } else {
     // Obviously bad values to show something went wrong
-    txBuffer[20] = -100;
-    txBuffer[21] = -100;
+    txBuffer[22] = -100;
+    txBuffer[23] = -100;
   }
 }
 
@@ -220,8 +220,11 @@ void build_full_packet() {
   txBuffer[9] = battery_byte();
 
   txBuffer[10] = sats & 0xFF;
-  txBuffer[11] = uptime & 0xFF;
-  txBuffer[12] = minutes_lost & 0xFF;
+  txBuffer[11] = (uptime >> 8) & 0xFF;
+  txBuffer[12] = uptime & 0xFF;
+
+  txBuffer[13] = (minutes_lost >> 8) & 0xFF;
+  txBuffer[14] = minutes_lost & 0xFF;
 
   pack_bme280();
   pack_ltr390();
@@ -255,8 +258,10 @@ enum mapper_uplink_result gpslost_uplink(void) {
   txBuffer[8] = 0; //Another obviously wrong value
   txBuffer[9] = battery_byte();
   txBuffer[10] = tGPS.satellites.value() & 0xFF;
-  txBuffer[11] = uptime & 0xFF;
-  txBuffer[12] = minutes_lost & 0xFF;
+  txBuffer[11] = (uptime >> 8) & 0xFF;
+  txBuffer[12] = uptime & 0xFF;
+  txBuffer[13] = (minutes_lost >> 8) & 0xFF;
+  txBuffer[14] = minutes_lost & 0xFF;
 
   pack_bme280();
   pack_ltr390();

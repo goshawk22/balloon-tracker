@@ -33,12 +33,12 @@ function Decoder(bytes, port) {
       decoded.speed = parseFloat((((bytes[8])) / 1.609).toFixed(2));
       decoded.battery = parseFloat((bytes[9] / 100 + 2).toFixed(2));
       decoded.sats = bytes[10];
-      decoded.uptime = bytes[11];
-      decoded.minutes_lost = bytes[12];
-      decoded.temperature = ((bytes[13] << 8) + bytes[14]) / 100.0;
-      decoded.pressure = (bytes[15] << 16) + (bytes[16] << 8) + bytes[16];
-      decoded.humidity = ((bytes[18] << 8) + bytes[19]) / 100.0;
-      decoded.uv = (bytes[20] << 8) + bytes[21];
+      decoded.uptime = (bytes[11] << 8) + bytes[12];
+      decoded.minutes_lost = (bytes[13] << 8) + bytes[14];
+      decoded.temperature = ((bytes[15] << 8) + bytes[16]) / 100.0
+      decoded.pressure = (bytes[17] << 16) + (bytes[18] << 8) + bytes[19];
+      decoded.humidity = ((bytes[20] << 8) + bytes[21]) / 100.0;
+      decoded.uv = (bytes[22] << 8) + bytes[23];
       
       decoded.accuracy = 2.5; // Bogus Accuracy required by Cargo/Mapper integration
       decoded.status = "GPS";
@@ -65,12 +65,12 @@ function Decoder(bytes, port) {
       decoded.speed = parseFloat((((bytes[8])) / 1.609).toFixed(2));
       decoded.battery = parseFloat((bytes[9] / 100 + 2).toFixed(2));
       decoded.sats = bytes[10];
-      decoded.uptime = bytes[11];
-      decoded.minutes_lost = bytes[12];
-      decoded.temperature = ((bytes[13] << 8) + bytes[14]) / 100.0;
-      decoded.pressure = (bytes[15] << 16) + (bytes[16] << 8) + bytes[16];
-      decoded.humidity = ((bytes[18] << 8) + bytes[19]) / 100.0;
-      decoded.uv = (bytes[20] << 8) + bytes[21];
+      decoded.uptime = (bytes[11] << 8) + bytes[12];
+      decoded.minutes_lost = (bytes[13] << 8) + bytes[14];
+      decoded.temperature = ((bytes[15] << 8) + bytes[16]) / 100.0
+      decoded.pressure = (bytes[17] << 16) + (bytes[18] << 8) + bytes[19];
+      decoded.humidity = ((bytes[20] << 8) + bytes[21]) / 100.0;
+      decoded.uv = (bytes[22] << 8) + bytes[23];
 
       decoded.accuracy = 2.5; // Bogus Accuracy required by Cargo/Mapper integration
       decoded.status = "LOST GPS";
