@@ -65,7 +65,9 @@ double last_send_lon = 0;               //
 uint32_t last_fix_time = 0;
 bool transmitted = false;               // Have we transmitted a sensor uplink yet?
 bool ping = false;                      // Are we waiting for a ping packet to complete?
-bool ping_requested = false;             // Has a ping packet been requested by a downlink?
+bool ping_requested = false;            // Has a ping packet been requested by a downlink?
+unsigned long int last_status_ms = 0;   // Time of last status uplink
+uint32_t status_uplinks = 0;            // Number of status uplinks
 
 unsigned int tx_interval_s = TX_INTERVAL;  // TX_INTERVAL
 
@@ -88,8 +90,8 @@ char msgBuffer[40];
 // Ping Payload
 static uint8_t txPing[1];
 
-unsigned long int ack_req = 0;
-unsigned long int ack_rx = 0;
+unsigned long int ack_req = 0;  // Number of acks requested
+unsigned long int ack_rx = 0;   // Number of acks received
 
 static boolean booted = false;
 
@@ -240,7 +242,9 @@ bool status_uplink(void) {
   txBuffer[6] = battery_byte();
   txBuffer[7] = uptime & 0xFF; // Time since booted
   Serial.printf("Tx: STATUS %lu \n", uptime);
-  return send_uplink(txBuffer, 8, FPORT_STATUS, 0, 0);
+  status_uplinks++;
+  last_status_ms = millis();
+  return send_uplink(txBuffer, 8, FPORT_STATUS, 1, 0);
 }
 
 enum mapper_uplink_result gpslost_uplink(void) {
@@ -488,6 +492,17 @@ void loop() {
       LTRsensorInit();
     }
     ltr390_alive = true;
+  }
+
+  // If the number of acks requested is greater than the number of acks received, something has gone wrong.
+  // Sometimes after rejoining the network, all the packets are late. To avoid this, reboot if packets don't seem to be getting through
+  if (ack_req - ack_rx > ACK_FAIL_THRESHOLD) {
+    ESP.restart();
+  }
+
+  // We sent a status uplink and requested an ack, but got nothing in return so try again
+  if (now - last_status_ms > 10 * 1000 && status_uplinks - ack_rx >= 1) {
+    status_uplink();
   }
 
   // Transmit ping packet
