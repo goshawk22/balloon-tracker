@@ -270,7 +270,7 @@ enum mapper_uplink_result gpslost_uplink(void) {
   pack_bme280();
   pack_ltr390();
   Serial.printf("Tx: GPSLOST %d\n", minutes_lost);
-  return send_uplink(txBuffer, 22, FPORT_GPSLOST, confirmed, 0);
+  return send_uplink(txBuffer, 24, FPORT_GPSLOST, confirmed, 0);
 }
 
 // Send a packet, if one is warranted
@@ -301,7 +301,7 @@ enum mapper_uplink_result gps_uplink() {
   last_send_lon = now_lon;
   
   // Send it!
-  return send_uplink(txBuffer, 22, FPORT_GPS, confirmed, 0);  // We did it!
+  return send_uplink(txBuffer, 24, FPORT_GPS, confirmed, 0);  // We did it!
 }
 
 enum mapper_uplink_result uplink() {
