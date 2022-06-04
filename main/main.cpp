@@ -67,7 +67,7 @@ bool transmitted = false;               // Have we transmitted a sensor uplink y
 bool ping = false;                      // Are we waiting for a ping packet to complete?
 bool ping_requested = false;            // Has a ping packet been requested by a downlink?
 unsigned long int last_status_ms = 0;   // Time of last status uplink
-uint32_t status_uplinks = 0;            // Number of status uplinks
+signed long int status_uplinks = 0;            // Number of status uplinks
 
 unsigned int tx_interval_s = TX_INTERVAL;  // TX_INTERVAL
 
@@ -90,8 +90,8 @@ char msgBuffer[40];
 // Ping Payload
 static uint8_t txPing[1];
 
-unsigned long int ack_req = 0;  // Number of acks requested
-unsigned long int ack_rx = 0;   // Number of acks received
+signed long int ack_req = 0;  // Number of acks requested
+signed long int ack_rx = 0;   // Number of acks received
 
 static boolean booted = false;
 
