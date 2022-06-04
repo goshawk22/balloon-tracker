@@ -496,7 +496,7 @@ void loop() {
 
   // If the number of acks requested is greater than the number of acks received, something has gone wrong.
   // Sometimes after rejoining the network, all the packets are late. To avoid this, reboot if packets don't seem to be getting through
-  if (ack_req - ack_rx > ACK_FAIL_THRESHOLD) {
+  if (ack_req - ack_rx >= ACK_FAIL_THRESHOLD) {
     ESP.restart();
   }
 
