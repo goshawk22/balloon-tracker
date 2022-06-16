@@ -87,9 +87,6 @@ static uint8_t txBuffer[24];
 // Buffer for Serial output
 char msgBuffer[40];
 
-// Ping Payload
-static uint8_t txPing[1];
-
 signed long int ack_req = 0;  // Number of acks requested
 signed long int ack_rx = 0;   // Number of acks received
 
@@ -144,9 +141,9 @@ void pack_lat_lon(double lat, double lon) {
 
 void pack_bme280() {
   if (bme280_alive) {
-    int bmeTemp = bme.readTemperature() * 100;
-    int bmePressure = bme.readPressure();
-    int bmeHumidity = bme.readHumidity() * 100;
+    unsigned long int bmeTemp = bme.readTemperature() * 100;
+    unsigned long int bmePressure = bme.readPressure();
+    unsigned long int bmeHumidity = bme.readHumidity() * 100;
 
     txBuffer[15] = (bmeTemp >> 8) & 0xFF;
     txBuffer[16] = bmeTemp & 0xFF;
@@ -157,28 +154,28 @@ void pack_bme280() {
     txBuffer[21] = bmeHumidity & 0xFF;
 
   } else {
-    // Obviously bad values to show something went wrong
-    txBuffer[15] = -100;
-    txBuffer[16] = -100;
-    txBuffer[17] = -100;
-    txBuffer[18] = -100;
-    txBuffer[19] = -100;
-    txBuffer[20] = -100;
-    txBuffer[21] = -100;
+    // Obviously bad values to show something went wrong. Temp may equal zero but only take as real when pressure and humidity are non-zero.
+    txBuffer[15] = 0;
+    txBuffer[16] = 0;
+    txBuffer[17] = 0;
+    txBuffer[18] = 0;
+    txBuffer[19] = 0;
+    txBuffer[20] = 0;
+    txBuffer[21] = 0;
 
   }
 }
 
 void pack_ltr390() {
   if (ltr390_alive) {
-    int uv = ltr.readUVS();
+    unsigned long int uv = ltr.readUVS();
 
     txBuffer[22] = (uv >> 8) & 0xFF;
     txBuffer[23] = uv & 0xFF;
   } else {
     // Obviously bad values to show something went wrong
-    txBuffer[22] = -100;
-    txBuffer[23] = -100;
+    txBuffer[22] = 0;
+    txBuffer[23] = 0;
   }
 }
 
@@ -238,7 +235,7 @@ bool status_uplink(void) {
 
   pack_lat_lon(last_send_lat, last_send_lon);
 
-  unsigned long int uptime = millis() / 1000 / 60;;
+  unsigned long int uptime = millis() / 1000 / 60;
   txBuffer[6] = battery_byte();
   txBuffer[7] = uptime & 0xFF; // Time since booted
   Serial.printf("Tx: STATUS %lu \n", uptime);
