@@ -314,8 +314,26 @@ enum mapper_uplink_result uplink() {
 }
 
 void ping_uplink() {
-  txPing[0] = 1 & 0xFF;
-  send_uplink(txPing, 1, FPORT_PING, 0, 1);
+  double lat;
+  double lon;
+  uint16_t altitudeGps;
+  if (tGPS.location.isValid() && tGPS.time.isValid() && tGPS.satellites.isValid() && tGPS.hdop.isValid() && 
+        tGPS.altitude.isValid() && tGPS.speed.isValid() && tGPS.satellites.value() >= 4) {
+          
+          lat = tGPS.location.lat();
+          lon = tGPS.location.lng();
+          pack_lat_lon(lat, lon);
+          altitudeGps = (uint16_t)tGPS.altitude.meters();
+          txBuffer[6] = (altitudeGps >> 8) & 0xFF;
+          txBuffer[7] = altitudeGps & 0xFF;
+        } else {
+          // Bad GPS fix
+          pack_lat_lon(last_send_lat, last_send_lon);
+          txBuffer[6] = 0;
+          txBuffer[7] = 0;
+        }
+
+  send_uplink(txBuffer, 8, FPORT_PING, 0, 1);
   ESP.restart();
 }
 
