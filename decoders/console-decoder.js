@@ -18,6 +18,21 @@ function Decoder(bytes, port) {
   location = latitude + ", " + longitude;
 
   switch (port) {
+    case 1: // Ping
+      decoded.latitude = latitude;
+      decoded.longitude = longitude;
+      decoded.location = location;
+
+      var altValue = ((bytes[6] << 8) >>> 0) + bytes[7];
+      var sign = bytes[6] & (1 << 7);
+      if (sign)
+        decoded.altitude = 0xFFFF0000 | altValue;
+      else
+        decoded.altitude = altValue;
+      
+      decoded.accuracy = 2.5; // Bogus Accuracy required by Cargo/Mapper integration
+      decoded.status = "PING";
+      
     case 2: // GPS!
       decoded.latitude = latitude;
       decoded.longitude = longitude;
