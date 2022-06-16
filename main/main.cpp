@@ -67,7 +67,8 @@ bool transmitted = false;               // Have we transmitted a sensor uplink y
 bool ping = false;                      // Are we waiting for a ping packet to complete?
 bool ping_requested = false;            // Has a ping packet been requested by a downlink?
 unsigned long int last_status_ms = 0;   // Time of last status uplink
-signed long int status_uplinks = 0;            // Number of status uplinks
+signed long int status_uplinks = 0;     // Number of status uplinks
+bool ack_rec = false;                   // Have we recived an ack yet? Confirms if our packets are being heard.
 
 unsigned int tx_interval_s = TX_INTERVAL;  // TX_INTERVAL
 
@@ -382,6 +383,7 @@ void lora_msg_callback(uint8_t message) {
 
   if (EV_ACK == message) {
     ack_rx++;
+    ack_rec = true;
     Serial.printf("ACK! %lu / %lu\n", ack_rx, ack_req);
   }
 
@@ -516,7 +518,7 @@ void loop() {
   }
 
   // We sent a status uplink and requested an ack, but got nothing in return so try again
-  if (now - last_status_ms > 10 * 1000 && status_uplinks - ack_rx >= 1) {
+  if (now - last_status_ms > 10 * 1000 && status_uplinks - ack_rx >= 1 && !ack_rec) {
     status_uplink();
   }
 
