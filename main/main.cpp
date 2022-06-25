@@ -332,6 +332,7 @@ void ping_uplink() {
         }
 
   send_uplink(txBuffer, 8, FPORT_PING, 0, 1);
+  Serial.println("Ping Uplink sent. Rebooting...");
   ESP.restart();
 }
 
@@ -445,6 +446,7 @@ void setup() {
   // Helium setup
   if (!ttn_setup()) {
     // Something has gone wrong, and now the tracker can't do anything. Restart and hope the problem fixes itself.
+    Serial.println("TTN Setup failed. Rebooting...");
     ESP.restart();
   }
 
@@ -510,6 +512,7 @@ void loop() {
   // If the number of acks requested is greater than the number of acks received, something has gone wrong.
   // Sometimes after rejoining the network, all the packets are late. To avoid this, reboot if packets don't seem to be getting through
   if (ack_req - ack_rx >= ACK_FAIL_THRESHOLD) {
+    Serial.println("Mismatch between number of acks requested and number of acks recieved. Rebooting...");
     ESP.restart();
   }
 
