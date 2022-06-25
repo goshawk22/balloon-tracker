@@ -387,10 +387,6 @@ void lora_msg_callback(uint8_t message) {
     Serial.printf("ACK! %lu / %lu\n", ack_rx, ack_req);
   }
 
-  if (EV_TXCOMPLETE == message) {
-    ttn_set_sf(LORAWAN_SF);
-  }
-
   if (EV_RXCOMPLETE == message || EV_RESPONSE == message) {
     size_t len = ttn_response_len();
     uint8_t data[len];
