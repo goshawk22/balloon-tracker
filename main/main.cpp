@@ -520,7 +520,7 @@ void loop() {
   }
 
   // We sent a status uplink and requested an ack, but got nothing in return so try again
-  if (now - last_status_ms > 10 * 1000 && status_uplinks - ack_rx >= 1 && !ack_rec) {
+  if (now - last_status_ms > 10 * 1000 && !ack_rec) {
     status_uplink();
   }
 
