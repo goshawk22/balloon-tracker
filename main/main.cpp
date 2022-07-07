@@ -468,9 +468,6 @@ void setup() {
   while (!isJoined) {
     ttn_loop();
   }
-  if (isJoined) {
-    status_uplink();
-  }
 }
 
 uint32_t woke_time_ms = 0;
