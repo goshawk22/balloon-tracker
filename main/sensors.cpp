@@ -20,7 +20,9 @@ void BMEsensorInit() {
         if (!bme280_status) {
             Serial.println("Could not find a valid BME280 sensor, check wiring, address, sensor ID!");
             Serial.print("SensorID was: 0x"); Serial.println(bme.sensorID(),16);
+            return false;
         }
+        return true;
     }
 }
 
@@ -29,6 +31,7 @@ void LTRsensorInit() {
         ltr390_status = ltr.begin();
         if (!ltr390_status) {
             Serial.println("Couldn't find LTR390 sensor!");
+            return false;
         }
         ltr.setMode(LTR390_MODE_UVS);
         if (ltr.getMode() == LTR390_MODE_ALS) {
@@ -55,5 +58,6 @@ void LTRsensorInit() {
         }
         ltr.setThresholds(100, 1000);
         ltr.configInterrupt(true, LTR390_MODE_UVS);
+        return true;
     }
 }

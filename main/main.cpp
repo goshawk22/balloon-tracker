@@ -429,8 +429,8 @@ void setup() {
   scanI2Cdevice();
 
   axp192Init();
-  BMEsensorInit();
-  LTRsensorInit();
+  bme280_alive = BMEsensorInit();
+  ltr390_alive = LTRsensorInit();
 
   // GPS sometimes gets wedged with no satellites in view and only a power-cycle
   // saves it. Here we turn off power and the delay in screen setup is enough
@@ -496,17 +496,20 @@ void loop() {
   } else {
     if (!bme280_alive) {
       //The sensor was dead but is now alive
-      BMEsensorInit();
+      if (BMEsensorInit()) {
+        bme280_alive = true;
+      }
     }
-    bme280_alive = true;
   }
+
   if (!checkI2Cdevice(I2C_LTR390_ADDRESS)) {
     ltr390_alive = false;
   } else {
     if (!ltr390_alive) {
-      LTRsensorInit();
+      if (LTRsensorInit()) {
+        ltr390_alive = true;
+      }
     }
-    ltr390_alive = true;
   }
 
   // If the number of acks requested is greater than the number of acks received, something has gone wrong.

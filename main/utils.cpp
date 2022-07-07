@@ -33,13 +33,11 @@ void scanI2Cdevice(void) {
 
       else if (addr == I2C_BME280_ADDRESS) {
         bme280_found = true;
-        bme280_alive = true;
         Serial.println("BME280 Found");
       }
 
       else if (addr == I2C_LTR390_ADDRESS) {
         ltr390_found = true;
-        ltr390_alive = true;
         Serial.println("LTR390 Found");
       }
 
