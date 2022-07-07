@@ -485,9 +485,6 @@ boolean ttn_send(uint8_t* data, uint8_t data_size, uint8_t port, bool confirmed)
     return false;
   }
 
-  // Set data rate (SF) for Uplink, as it might have changed during last Tx
-  ttn_sf(ttn_tx_sf);
-
   // Prepare upstream data transmission at the next possible time.
   // Parameters are port, data, length, confirmed
   LMIC_setTxData2(port, data, data_size, confirmed ? 1 : 0);
