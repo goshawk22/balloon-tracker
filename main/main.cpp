@@ -269,7 +269,8 @@ enum mapper_uplink_result gpslost_uplink(void) {
 }
 
 // Send a packet, if one is warranted
-enum mapper_uplink_result gps_uplink() {
+enum mapper_uplink_result gps_uplink(void) {
+  unsigned long int uptime = millis() / 1000 / 60;
   double now_lat = tGPS.location.lat();
   double now_lon = tGPS.location.lng();
 
@@ -296,6 +297,7 @@ enum mapper_uplink_result gps_uplink() {
   last_send_lon = now_lon;
   
   // Send it!
+  Serial.printf("Tx: GPS %lu \n", uptime);
   return send_uplink(txBuffer, 24, FPORT_GPS, confirmed, 0);  // We did it!
 }
 
