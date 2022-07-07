@@ -35,7 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // In areas of reduced coverage, the Mapper will try to send each packet six or more times with different SF/DR.
 // This causes irregular results and the location updates are infrequent, unpredictable, and out of date.
 // (0 means never, 1 means always, 2 every-other-one..)
-#define LORAWAN_CONFIRMED_EVERY 3  // Request Confirmation message every N Uplinks 
+#define LORAWAN_CONFIRMED_EVERY 0  // Request Confirmation message every N Uplinks 
 
 // How many acks can fail before we reboot. If this value is exceeded, it it likely that packets aren't being received due to some unknown bug.
 // To ensure we don't lose too much data, reboot and rejoin.
