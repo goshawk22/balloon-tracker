@@ -60,6 +60,7 @@ Copyright (C) 2021 by @Max_Plastix
 void ttn_register(void (*callback)(uint8_t message));
 
 unsigned long int last_send_ms = 0;     // Time of last uplink
+bool uplink_failed = false;             // Did the last attempted uplink fail?
 double last_send_lat = 0;               // Last known location
 double last_send_lon = 0;               //
 uint32_t last_fix_time = 0;
@@ -93,20 +94,28 @@ signed long int ack_rx = 0;   // Number of acks received
 
 static boolean booted = false;
 
-enum mapper_uplink_result send_uplink(uint8_t *txBuffer, uint8_t length, uint8_t fport, boolean confirmed, boolean ping) {
-  unsigned long int now = millis();
-
+bool ready() {
   // Don't attempt to send or update until we join Helium
   if (!isJoined)
-    return MAPPER_UPLINK_NOLORA;
+    return false;
 
   // LoRa is not ready for a new packet, maybe still sending the last one.
   if (!LMIC_queryTxReady())
-    return MAPPER_UPLINK_NOLORA;
+    return false;
   
   // Check if there is not a current TX/RX job running
   if (LMIC.opmode & OP_TXRXPEND)
+    return false;
+
+  return true;
+}
+
+enum mapper_uplink_result send_uplink(uint8_t *txBuffer, uint8_t length, uint8_t fport, boolean confirmed, boolean ping) {
+  unsigned long int now = millis();
+
+  if (!ready()) {
     return MAPPER_UPLINK_NOLORA;
+  }
 
   if (confirmed) {
     Serial.println("ACK requested");
@@ -517,12 +526,12 @@ void loop() {
   }
 
   // We sent a status uplink and requested an ack, but got nothing in return so try again
-  if (now - last_status_ms > 10 * 1000 && !ack_rec) {
-    status_uplink();
+  if (now - last_status_ms > 30 * 1000 && !ack_rec && ready()) {
+      status_uplink();
   }
 
   // Transmit ping packet
-  if ((!ping && LMIC_queryTxReady() && now - last_send_ms > 10*1000) && ping_requested) {
+  if (!ping && ready() && now - last_send_ms > 10 * 1000 && ping_requested) {
     ping_requested = false;
     Serial.println("** PING");
     ping = true;
@@ -530,14 +539,17 @@ void loop() {
     ping_uplink();
   }
   
-  // Only transmit if joined and TxReady
-  if (isJoined && LMIC_queryTxReady()) {
-    if (now - last_send_ms > tx_interval_s * 1000 || !transmitted) {
+  // Only transmit if joined, a ping isn't in progress and we have receieved an ack (aka no more status uplinks)
+  if (!ping && ack_rec && ready()) {
+    // Transmit if it is time, we haven't transmitted yet, or if Tx is ready after a failed transmission
+    if (now - last_send_ms > tx_interval_s * 1000 || (!transmitted && ready()) || (uplink_failed && ready())) {
       Serial.println("** TIME");
       if (uplink() == MAPPER_UPLINK_SUCCESS) {
         transmitted = true;
-        // Reset the ping status
-        ping = false;
+        uplink_failed = false;
+      } else {
+        uplink_failed = true;
+        Serial.println("Uplink Failed");
       }
     }
   }
