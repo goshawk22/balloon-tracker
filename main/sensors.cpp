@@ -14,7 +14,7 @@ Adafruit_LTR390 ltr = Adafruit_LTR390();
 unsigned bme280_status;
 unsigned ltr390_status;
 
-void BMEsensorInit() {
+bool BMEsensorInit() {
     if (bme280_found) {
         bme280_status = bme.begin(I2C_BME280_ADDRESS);
         if (!bme280_status) {
@@ -26,7 +26,7 @@ void BMEsensorInit() {
     }
 }
 
-void LTRsensorInit() {
+bool LTRsensorInit() {
     if (ltr390_found) {
         ltr390_status = ltr.begin();
         if (!ltr390_status) {

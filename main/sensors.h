@@ -9,5 +9,5 @@ extern Adafruit_BME280 bme; // use I2C interface
 
 extern Adafruit_LTR390 ltr;
 
-void BMEsensorInit();
-void LTRsensorInit();
+bool BMEsensorInit();
+bool LTRsensorInit();
