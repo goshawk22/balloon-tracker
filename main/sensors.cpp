@@ -24,6 +24,7 @@ bool BMEsensorInit() {
         }
         return true;
     }
+    return false;
 }
 
 bool LTRsensorInit() {
@@ -60,4 +61,5 @@ bool LTRsensorInit() {
         ltr.configInterrupt(true, LTR390_MODE_UVS);
         return true;
     }
+    return false;
 }
