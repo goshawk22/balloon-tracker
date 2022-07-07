@@ -47,17 +47,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define LORAWAN_SF DR_SF7  // Spreading factor (recommended DR_SF7 for network map purposes)
 #define LORAWAN_SF_PING DR_SF12
 
-// There are some extra non-Mapper Uplink messages we can send, but there's no good way to avoid sending these
-// to all Integrations from the Decoder.  This causes (normal) Error messages on the Console because Mapper will throw
-// them out for having no coordinates.  It doesn't hurt anything, as they are correctly filtered by the Decoder, but if
-// you don't like seeing Integration Errors, then set these to 0.  Set these to 1 for extra non-mapper messages.
-#ifndef SEND_GPSLOST_UPLINKS
-#define SEND_GPSLOST_UPLINKS 1  // GPS Lost messages
-#endif
-#ifndef SEND_STATUS_UPLINKS
-#define SEND_STATUS_UPLINKS  1  // Booted message
-#endif
-
 // -----------------------------------------------------------------------------
 // Less common Configuration iteams
 // -----------------------------------------------------------------------------

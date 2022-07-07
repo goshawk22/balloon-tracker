@@ -231,9 +231,6 @@ void build_full_packet() {
 }
 
 bool status_uplink(void) {
-  if (!SEND_STATUS_UPLINKS)
-    return false;
-
   pack_lat_lon(last_send_lat, last_send_lon);
 
   unsigned long int uptime = millis() / 1000 / 60;
