@@ -522,7 +522,7 @@ void loop() {
   }
 
   // Transmit ping packet
-  if ((!ping && LMIC_queryTxReady() && now - last_send_ms > 10*1000) && ((LORAWAN_PING_EVERY > 0 && ttn_get_count() % LORAWAN_PING_EVERY == 0) || ping_requested)) {
+  if ((!ping && LMIC_queryTxReady() && now - last_send_ms > 10*1000) && ping_requested) {
     ping_requested = false;
     Serial.println("** PING");
     ping = true;

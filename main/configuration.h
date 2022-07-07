@@ -41,10 +41,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // To ensure we don't lose too much data, reboot and rejoin.
 #define ACK_FAIL_THRESHOLD 3
 
-// Ping messages are small (1 byte) messages that we transmit every N uplinks on SF12 for maximum range.
-// They are designed to see how far we can feasibly transmit a packet.
-#define LORAWAN_PING_EVERY 0  // Request Ping message every N Uplinks
-
 // Spreading Factor (Data Rate) determines how long each 11-byte Mapper Uplink is on-air, and how observable it is.
 // SF10 is about two seconds per packet, and the highest range, while SF7 is a good compromise
 // for moving vehicles and reasonable mapping observations.
